@@ -7,21 +7,21 @@ import { cn } from "@/lib/utils";
 export default function Leaderboard() {
   const getBadgeIcon = (badge: string) => {
     switch (badge) {
-      case "⚡": return <Zap className="w-4 h-4 text-accent" />;
-      case "🏆": return <Trophy className="w-4 h-4 text-primary" />;
-      case "🎯": return <Target className="w-4 h-4 text-secondary" />;
-      case "⭐": return <Star className="w-4 h-4 text-accent" />;
-      case "🚀": return <Zap className="w-4 h-4 text-primary" />;
-      case "💎": return <Medal className="w-4 h-4 text-secondary" />;
-      case "🔥": return <Flame className="w-4 h-4 text-destructive" />;
-      default: return <Star className="w-4 h-4 text-muted-foreground" />;
+      case "⚡": return <Zap className="w-4 h-4 text-accent icon-hover-accent" />;
+      case "🏆": return <Trophy className="w-4 h-4 text-primary icon-hover-primary" />;
+      case "🎯": return <Target className="w-4 h-4 text-secondary icon-hover-secondary" />;
+      case "⭐": return <Star className="w-4 h-4 text-accent icon-hover-accent" />;
+      case "🚀": return <Zap className="w-4 h-4 text-primary icon-hover-primary" />;
+      case "💎": return <Medal className="w-4 h-4 text-secondary icon-hover-secondary" />;
+      case "🔥": return <Flame className="w-4 h-4 text-destructive icon-hover" />;
+      default: return <Star className="w-4 h-4 text-muted-foreground icon-hover" />;
     }
   };
 
   const getRankStyle = (index: number) => {
-    if (index === 0) return "bg-gradient-to-r from-yellow-400 to-yellow-600 text-white";
-    if (index === 1) return "bg-gradient-to-r from-gray-300 to-gray-500 text-white";
-    if (index === 2) return "bg-gradient-to-r from-amber-600 to-amber-800 text-white";
+    if (index === 0) return "bg-gradient-to-r from-primary to-primary-glow text-white";
+    if (index === 1) return "bg-gradient-to-r from-secondary to-secondary-hover text-white";
+    if (index === 2) return "bg-gradient-to-r from-accent to-accent-hover text-white";
     return "bg-muted text-muted-foreground";
   };
 
@@ -146,23 +146,23 @@ export default function Leaderboard() {
             <div>
               <h4 className="font-medium text-foreground mb-3">Available Badges</h4>
               <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 bg-accent/10 rounded-lg text-center">
-                  <Zap className="w-6 h-6 text-accent mx-auto mb-1" />
+                <div className="p-3 bg-accent/10 rounded-lg text-center hover:bg-accent/20 transition-colors cursor-pointer">
+                  <Zap className="w-6 h-6 text-accent mx-auto mb-1 icon-hover-accent" />
                   <p className="text-xs font-medium text-accent">Speed Demon</p>
                   <p className="text-xs text-muted-foreground">Avg &lt; 20 min</p>
                 </div>
-                <div className="p-3 bg-secondary/10 rounded-lg text-center">
-                  <Target className="w-6 h-6 text-secondary mx-auto mb-1" />
+                <div className="p-3 bg-secondary/10 rounded-lg text-center hover:bg-secondary/20 transition-colors cursor-pointer">
+                  <Target className="w-6 h-6 text-secondary mx-auto mb-1 icon-hover-secondary" />
                   <p className="text-xs font-medium text-secondary">Precision Pro</p>
                   <p className="text-xs text-muted-foreground">95% on-time</p>
                 </div>
-                <div className="p-3 bg-primary/10 rounded-lg text-center">
-                  <Trophy className="w-6 h-6 text-primary mx-auto mb-1" />
+                <div className="p-3 bg-primary/10 rounded-lg text-center hover:bg-primary/20 transition-colors cursor-pointer">
+                  <Trophy className="w-6 h-6 text-primary mx-auto mb-1 icon-hover-primary" />
                   <p className="text-xs font-medium text-primary">Champion</p>
                   <p className="text-xs text-muted-foreground">Top 3 monthly</p>
                 </div>
-                <div className="p-3 bg-destructive/10 rounded-lg text-center">
-                  <Flame className="w-6 h-6 text-destructive mx-auto mb-1" />
+                <div className="p-3 bg-destructive/10 rounded-lg text-center hover:bg-destructive/20 transition-colors cursor-pointer">
+                  <Flame className="w-6 h-6 text-destructive mx-auto mb-1 icon-hover" />
                   <p className="text-xs font-medium text-destructive">Hot Streak</p>
                   <p className="text-xs text-muted-foreground">10 consecutive</p>
                 </div>

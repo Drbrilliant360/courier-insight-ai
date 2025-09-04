@@ -22,10 +22,10 @@
     --secondary-foreground: 0 0% 100%;
     --secondary-hover: 142 76% 30%;
 
-    /* Accent - Warning Orange */
-    --accent: 31 81% 56%;
+    /* Accent - Neutral Grey */
+    --accent: 220 9% 46%;
     --accent-foreground: 0 0% 100%;
-    --accent-hover: 31 81% 50%;
+    --accent-hover: 220 9% 40%;
 
     /* Destructive - Error Red */
     --destructive: 0 84% 60%;
@@ -159,6 +159,23 @@
 
   .animate-pulse-glow {
     animation: pulse-glow 2s ease-in-out infinite alternate;
+  }
+
+  /* Icon hover effects */
+  .icon-hover {
+    @apply transition-all duration-300 hover:scale-110 hover:rotate-12 cursor-pointer;
+  }
+
+  .icon-hover-primary {
+    @apply transition-all duration-300 hover:scale-110 hover:text-primary cursor-pointer;
+  }
+
+  .icon-hover-secondary {
+    @apply transition-all duration-300 hover:scale-110 hover:text-secondary cursor-pointer;
+  }
+
+  .icon-hover-accent {
+    @apply transition-all duration-300 hover:scale-110 hover:text-accent cursor-pointer;
   }
 }
 

@@ -80,7 +80,7 @@ export default function AnomalyDetection() {
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center space-x-2">
-                    <AlertTriangle className={cn("w-5 h-5", getSeverityColor(alert.severity))} />
+                    <AlertTriangle className={cn("w-5 h-5 icon-hover", getSeverityColor(alert.severity))} />
                     <span className={cn("text-sm font-medium uppercase", getSeverityColor(alert.severity))}>
                       {alert.severity} priority
                     </span>
@@ -148,9 +148,9 @@ export default function AnomalyDetection() {
       {/* Detection System Overview */}
       <MetricCard title="AI Detection System">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="text-center">
-            <div className="w-16 h-16 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <Eye className="w-8 h-8 text-primary" />
+          <div className="text-center hover:scale-105 transition-transform cursor-pointer">
+            <div className="w-16 h-16 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4 hover:bg-primary/20 transition-colors">
+              <Eye className="w-8 h-8 text-primary icon-hover-primary" />
             </div>
             <h3 className="font-medium text-foreground mb-2">Real-Time Monitoring</h3>
             <p className="text-sm text-muted-foreground">
@@ -158,9 +158,9 @@ export default function AnomalyDetection() {
             </p>
           </div>
           
-          <div className="text-center">
-            <div className="w-16 h-16 bg-secondary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <Zap className="w-8 h-8 text-secondary" />
+          <div className="text-center hover:scale-105 transition-transform cursor-pointer">
+            <div className="w-16 h-16 bg-secondary/10 rounded-lg flex items-center justify-center mx-auto mb-4 hover:bg-secondary/20 transition-colors">
+              <Zap className="w-8 h-8 text-secondary icon-hover-secondary" />
             </div>
             <h3 className="font-medium text-foreground mb-2">Instant Alerts</h3>
             <p className="text-sm text-muted-foreground">
@@ -168,9 +168,9 @@ export default function AnomalyDetection() {
             </p>
           </div>
           
-          <div className="text-center">
-            <div className="w-16 h-16 bg-accent/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <Shield className="w-8 h-8 text-accent" />
+          <div className="text-center hover:scale-105 transition-transform cursor-pointer">
+            <div className="w-16 h-16 bg-accent/10 rounded-lg flex items-center justify-center mx-auto mb-4 hover:bg-accent/20 transition-colors">
+              <Shield className="w-8 h-8 text-accent icon-hover-accent" />
             </div>
             <h3 className="font-medium text-foreground mb-2">Fraud Prevention</h3>
             <p className="text-sm text-muted-foreground">
