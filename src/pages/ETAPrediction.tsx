@@ -1,10 +1,20 @@
-import { Clock, TrendingUp, Target, Brain } from "lucide-react";
+import { Clock, TrendingUp, Target, Brain, MapPin, Cloud, Zap, Activity } from "lucide-react";
 import { MetricCard } from "@/components/ui/metric-card";
 import { StatCard } from "@/components/ui/stat-card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { etaPredictions } from "@/data/mockData";
+import { useAIModels, useRealTimeData } from "@/hooks/useAIModels";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 export default function ETAPrediction() {
+  const { isInitialized, isLoading, predictETA, error } = useAIModels();
+  const { trafficData, weatherData } = useRealTimeData();
+  const [aiPrediction, setAiPrediction] = useState<any>(null);
+  const [testOrderId, setTestOrderId] = useState("ORD-TEST-001");
+
   const getAccuracyColor = (accuracy: string) => {
     switch (accuracy) {
       case "excellent": return "text-secondary";
@@ -21,6 +31,26 @@ export default function ETAPrediction() {
     if (confidence >= 70) return "text-accent";
     return "text-destructive";
   };
+
+  const handleAIPrediction = async () => {
+    const historicalData = [22, 25, 19, 28, 24, 21, 26, 23, 27, 20]; // Mock historical delivery times
+    const routeFactors = {
+      traffic: trafficData?.traffic || 'moderate',
+      distance: 5.2,
+      weather: weatherData?.condition || 'clear'
+    };
+
+    const result = await predictETA(historicalData, routeFactors);
+    if (result) {
+      setAiPrediction(result);
+    }
+  };
+
+  useEffect(() => {
+    if (isInitialized) {
+      handleAIPrediction();
+    }
+  }, [isInitialized, trafficData, weatherData]);
 
   return (
     <div className="p-6 space-y-6">
@@ -42,25 +72,25 @@ export default function ETAPrediction() {
           icon={Target}
         />
         <StatCard
-          title="Average Confidence"
-          value="91%"
-          change="High reliability"
-          changeType="positive"
+          title="AI Model Status"
+          value={isInitialized ? "Active" : "Loading"}
+          change={isInitialized ? "Chronos T5 Ready" : "Initializing..."}
+          changeType={isInitialized ? "positive" : "neutral"}
           icon={Brain}
         />
         <StatCard
-          title="Model Performance"
-          value="Excellent"
-          change="Last updated: 2h ago"
-          changeType="neutral"
-          icon={TrendingUp}
+          title="Real-time Data"
+          value={trafficData ? "Connected" : "Offline"}
+          change={trafficData ? `Traffic: ${trafficData.traffic}` : "Connecting..."}
+          changeType={trafficData ? "positive" : "neutral"}
+          icon={MapPin}
         />
         <StatCard
-          title="Predictions Today"
-          value="247"
-          change="23 currently active"
-          changeType="neutral"
-          icon={Clock}
+          title="Weather Integration"
+          value={weatherData?.condition || "Unknown"}
+          change={weatherData ? `${weatherData.temperature}°C` : "Loading..."}
+          changeType={weatherData ? "positive" : "neutral"}
+          icon={Cloud}
         />
       </div>
 
@@ -192,53 +222,83 @@ export default function ETAPrediction() {
         </MetricCard>
       </div>
 
-      {/* ETA Calculator */}
-      <MetricCard title="Real-Time ETA Calculator">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-foreground mb-2 block">
-                Order Details
-              </label>
+      {/* AI ETA Calculator */}
+      <MetricCard title="Real-Time AI ETA Calculator" glow>
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <h4 className="font-semibold text-foreground">Order Details</h4>
               <div className="space-y-3">
-                <div className="p-3 bg-muted/30 rounded-lg">
-                  <p className="text-sm text-muted-foreground">Order ID</p>
-                  <p className="font-medium text-foreground">DEL-2024-015</p>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Order ID</label>
+                  <Input 
+                    value={testOrderId} 
+                    onChange={(e) => setTestOrderId(e.target.value)}
+                    className="mt-1" 
+                  />
                 </div>
-                <div className="p-3 bg-muted/30 rounded-lg">
-                  <p className="text-sm text-muted-foreground">Pickup Location</p>
-                  <p className="font-medium text-foreground">Manhattan, NY</p>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Pickup Location</label>
+                  <Input value="Downtown Restaurant" className="mt-1" readOnly />
                 </div>
-                <div className="p-3 bg-muted/30 rounded-lg">
-                  <p className="text-sm text-muted-foreground">Delivery Location</p>
-                  <p className="font-medium text-foreground">Brooklyn Heights, NY</p>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Delivery Address</label>
+                  <Input value="123 Main St, Brooklyn" className="mt-1" readOnly />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Distance</label>
+                  <Input value="5.2 km" className="mt-1" readOnly />
                 </div>
               </div>
             </div>
-          </div>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-foreground mb-2 block">
-                AI Prediction Results
-              </label>
-              <div className="p-6 bg-gradient-primary text-white rounded-lg">
-                <div className="text-center">
-                  <p className="text-3xl font-bold mb-2">18 minutes</p>
-                  <p className="text-white/80 mb-4">Estimated Delivery Time</p>
-                  <div className="flex items-center justify-center space-x-4 text-sm">
-                    <div>
-                      <p className="text-white/80">Confidence</p>
-                      <p className="font-medium">94%</p>
-                    </div>
-                    <div className="w-px h-8 bg-white/20"></div>
-                    <div>
-                      <p className="text-white/80">Range</p>
-                      <p className="font-medium">16-20 min</p>
-                    </div>
-                  </div>
+            
+            <div className="space-y-4">
+              <h4 className="font-semibold text-foreground">AI Prediction Results</h4>
+              <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-muted-foreground">Predicted ETA:</span>
+                  <span className="text-lg font-bold text-primary">
+                    {aiPrediction?.predictedETA || "23 minutes"}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-muted-foreground">Confidence Level:</span>
+                  <Badge variant="outline" className={`${getConfidenceColor(aiPrediction?.confidence || 92)}`}>
+                    {aiPrediction?.confidence || 92}%
+                  </Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-muted-foreground">Traffic Impact:</span>
+                  <span className="text-sm text-muted-foreground">
+                    {trafficData?.estimatedDelay ? `+${trafficData.estimatedDelay} min` : "+3 min"} 
+                    ({trafficData?.traffic || "moderate"})
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-muted-foreground">Weather Impact:</span>
+                  <span className="text-sm text-muted-foreground">
+                    {weatherData?.visibility === 'poor' ? '+2 min' : 'No impact'} 
+                    ({weatherData?.condition || "clear"})
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-muted-foreground">AI Model:</span>
+                  <Badge variant="secondary">
+                    {aiPrediction?.model || "chronos-t5"}
+                  </Badge>
                 </div>
               </div>
+              <Button 
+                className="w-full" 
+                onClick={handleAIPrediction}
+                disabled={isLoading || !isInitialized}
+              >
+                <Brain className="w-4 h-4 mr-2" />
+                {isLoading ? "Calculating..." : "Recalculate with AI"}
+              </Button>
+              {error && (
+                <p className="text-sm text-destructive mt-2">{error}</p>
+              )}
             </div>
           </div>
         </div>
