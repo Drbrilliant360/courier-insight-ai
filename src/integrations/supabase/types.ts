@@ -14,7 +14,326 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      analytics_data: {
+        Row: {
+          file_size: number
+          filename: string
+          id: string
+          metadata: Json | null
+          processed_records: number | null
+          processing_status: string | null
+          total_records: number
+          upload_date: string
+          uploaded_by: string
+        }
+        Insert: {
+          file_size: number
+          filename: string
+          id?: string
+          metadata?: Json | null
+          processed_records?: number | null
+          processing_status?: string | null
+          total_records: number
+          upload_date?: string
+          uploaded_by: string
+        }
+        Update: {
+          file_size?: number
+          filename?: string
+          id?: string
+          metadata?: Json | null
+          processed_records?: number | null
+          processing_status?: string | null
+          total_records?: number
+          upload_date?: string
+          uploaded_by?: string
+        }
+        Relationships: []
+      }
+      anomalies: {
+        Row: {
+          anomaly_type: string
+          courier_id: string | null
+          description: string
+          detected_at: string
+          id: string
+          is_resolved: boolean | null
+          order_id: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: Database["public"]["Enums"]["anomaly_severity"] | null
+        }
+        Insert: {
+          anomaly_type: string
+          courier_id?: string | null
+          description: string
+          detected_at?: string
+          id?: string
+          is_resolved?: boolean | null
+          order_id?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: Database["public"]["Enums"]["anomaly_severity"] | null
+        }
+        Update: {
+          anomaly_type?: string
+          courier_id?: string | null
+          description?: string
+          detected_at?: string
+          id?: string
+          is_resolved?: boolean | null
+          order_id?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: Database["public"]["Enums"]["anomaly_severity"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anomalies_courier_id_fkey"
+            columns: ["courier_id"]
+            isOneToOne: false
+            referencedRelation: "couriers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anomalies_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      couriers: {
+        Row: {
+          created_at: string
+          current_location: unknown | null
+          email: string | null
+          id: string
+          name: string
+          on_time_deliveries: number | null
+          phone: string | null
+          rating: number | null
+          status: Database["public"]["Enums"]["courier_status"] | null
+          total_deliveries: number | null
+          updated_at: string
+          user_id: string | null
+          vehicle_type: string | null
+        }
+        Insert: {
+          created_at?: string
+          current_location?: unknown | null
+          email?: string | null
+          id?: string
+          name: string
+          on_time_deliveries?: number | null
+          phone?: string | null
+          rating?: number | null
+          status?: Database["public"]["Enums"]["courier_status"] | null
+          total_deliveries?: number | null
+          updated_at?: string
+          user_id?: string | null
+          vehicle_type?: string | null
+        }
+        Update: {
+          created_at?: string
+          current_location?: unknown | null
+          email?: string | null
+          id?: string
+          name?: string
+          on_time_deliveries?: number | null
+          phone?: string | null
+          rating?: number | null
+          status?: Database["public"]["Enums"]["courier_status"] | null
+          total_deliveries?: number | null
+          updated_at?: string
+          user_id?: string | null
+          vehicle_type?: string | null
+        }
+        Relationships: []
+      }
+      delivery_tracking: {
+        Row: {
+          courier_id: string | null
+          id: string
+          location: unknown
+          notes: string | null
+          order_id: string
+          status: Database["public"]["Enums"]["delivery_status"]
+          timestamp: string
+        }
+        Insert: {
+          courier_id?: string | null
+          id?: string
+          location: unknown
+          notes?: string | null
+          order_id: string
+          status: Database["public"]["Enums"]["delivery_status"]
+          timestamp?: string
+        }
+        Update: {
+          courier_id?: string | null
+          id?: string
+          location?: unknown
+          notes?: string | null
+          order_id?: string
+          status?: Database["public"]["Enums"]["delivery_status"]
+          timestamp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_tracking_courier_id_fkey"
+            columns: ["courier_id"]
+            isOneToOne: false
+            referencedRelation: "couriers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_tracking_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          actual_delivery_time: string | null
+          actual_pickup_time: string | null
+          courier_id: string | null
+          created_at: string
+          customer_name: string
+          customer_phone: string | null
+          delivery_address: string
+          delivery_location: unknown
+          estimated_delivery_time: string | null
+          estimated_pickup_time: string | null
+          id: string
+          order_number: string
+          pickup_address: string
+          pickup_location: unknown
+          priority_level: number | null
+          special_instructions: string | null
+          status: Database["public"]["Enums"]["delivery_status"] | null
+          updated_at: string
+        }
+        Insert: {
+          actual_delivery_time?: string | null
+          actual_pickup_time?: string | null
+          courier_id?: string | null
+          created_at?: string
+          customer_name: string
+          customer_phone?: string | null
+          delivery_address: string
+          delivery_location: unknown
+          estimated_delivery_time?: string | null
+          estimated_pickup_time?: string | null
+          id?: string
+          order_number: string
+          pickup_address: string
+          pickup_location: unknown
+          priority_level?: number | null
+          special_instructions?: string | null
+          status?: Database["public"]["Enums"]["delivery_status"] | null
+          updated_at?: string
+        }
+        Update: {
+          actual_delivery_time?: string | null
+          actual_pickup_time?: string | null
+          courier_id?: string | null
+          created_at?: string
+          customer_name?: string
+          customer_phone?: string | null
+          delivery_address?: string
+          delivery_location?: unknown
+          estimated_delivery_time?: string | null
+          estimated_pickup_time?: string | null
+          id?: string
+          order_number?: string
+          pickup_address?: string
+          pickup_location?: unknown
+          priority_level?: number | null
+          special_instructions?: string | null
+          status?: Database["public"]["Enums"]["delivery_status"] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_courier_id_fkey"
+            columns: ["courier_id"]
+            isOneToOne: false
+            referencedRelation: "couriers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          first_name: string | null
+          id: string
+          last_name: string | null
+          phone: string | null
+          role: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          phone?: string | null
+          role?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          phone?: string | null
+          role?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      zones: {
+        Row: {
+          avg_delivery_time: number | null
+          boundary_coordinates: string | null
+          created_at: string
+          delivery_fee: number | null
+          id: string
+          is_active: boolean | null
+          name: string
+        }
+        Insert: {
+          avg_delivery_time?: number | null
+          boundary_coordinates?: string | null
+          created_at?: string
+          delivery_fee?: number | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+        }
+        Update: {
+          avg_delivery_time?: number | null
+          boundary_coordinates?: string | null
+          created_at?: string
+          delivery_fee?: number | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +342,16 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      anomaly_severity: "low" | "medium" | "high" | "critical"
+      courier_status: "offline" | "available" | "busy" | "on_break"
+      delivery_status:
+        | "pending"
+        | "assigned"
+        | "picked_up"
+        | "in_transit"
+        | "delivered"
+        | "failed"
+        | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +478,18 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      anomaly_severity: ["low", "medium", "high", "critical"],
+      courier_status: ["offline", "available", "busy", "on_break"],
+      delivery_status: [
+        "pending",
+        "assigned",
+        "picked_up",
+        "in_transit",
+        "delivered",
+        "failed",
+        "cancelled",
+      ],
+    },
   },
 } as const
