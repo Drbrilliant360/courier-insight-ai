@@ -10,45 +10,45 @@ export const deliveryStats = {
 };
 
 export const courierLeaderboard = [
-  { id: 1, name: "John Smith", score: 98, deliveries: 156, onTime: 154, badges: ["⚡", "🏆"] },
-  { id: 2, name: "Maria Garcia", score: 96, deliveries: 142, onTime: 139, badges: ["🎯", "⭐"] },
-  { id: 3, name: "David Chen", score: 94, deliveries: 138, onTime: 133, badges: ["🚀"] },
-  { id: 4, name: "Sarah Johnson", score: 92, deliveries: 129, onTime: 122, badges: ["💎"] },
-  { id: 5, name: "Ahmed Ali", score: 90, deliveries: 134, onTime: 125, badges: ["🔥"] }
+  { id: 1, name: "Juma Mwalimu", score: 98, deliveries: 156, onTime: 154, badges: ["⚡", "🏆"] },
+  { id: 2, name: "Fatuma Ally", score: 96, deliveries: 142, onTime: 139, badges: ["🎯", "⭐"] },
+  { id: 3, name: "Hassan Mwinyi", score: 94, deliveries: 138, onTime: 133, badges: ["🚀"] },
+  { id: 4, name: "Rehema Kondo", score: 92, deliveries: 129, onTime: 122, badges: ["💎"] },
+  { id: 5, name: "Bakari Omari", score: 90, deliveries: 134, onTime: 125, badges: ["🔥"] }
 ];
 
 export const recentDeliveries = [
   {
     id: "DEL-2024-001",
-    courier: "John Smith",
-    destination: "Downtown NYC",
+    courier: "Juma Mwalimu",
+    destination: "Kinondoni, Dar es Salaam",
     eta: "15 min",
     status: "on-time",
-    coordinates: [40.7128, -74.0060]
+    coordinates: [-6.7924, 39.2083]
   },
   {
     id: "DEL-2024-002",
-    courier: "Maria Garcia",
-    destination: "Brooklyn Heights",
+    courier: "Fatuma Ally",
+    destination: "Ilala, Dar es Salaam",
     eta: "8 min",
     status: "ahead",
-    coordinates: [40.6962, -73.9961]
+    coordinates: [-6.8024, 39.2583]
   },
   {
     id: "DEL-2024-003",
-    courier: "David Chen",
-    destination: "Queens Plaza",
+    courier: "Hassan Mwinyi",
+    destination: "Temeke, Dar es Salaam",
     eta: "32 min",
     status: "delayed",
-    coordinates: [40.7505, -73.9370]
+    coordinates: [-6.8296, 39.2669]
   },
   {
     id: "DEL-2024-004",
-    courier: "Sarah Johnson",
-    destination: "Manhattan Midtown",
+    courier: "Rehema Kondo",
+    destination: "Ubungo, Dar es Salaam",
     eta: "12 min",
     status: "anomaly",
-    coordinates: [40.7549, -73.9840]
+    coordinates: [-6.7896, 39.2369]
   }
 ];
 
@@ -56,24 +56,24 @@ export const anomalyAlerts = [
   {
     id: "ANO-001",
     type: "Route Deviation",
-    courier: "Mike Rodriguez",
-    description: "Courier deviated 2.3km from optimal route",
+    courier: "Amani Mushi",
+    description: "Courier deviated 2.3km from optimal route in Kariakoo",
     severity: "medium",
     timestamp: "2024-01-15 14:23:00"
   },
   {
     id: "ANO-002",
     type: "Delivery Time",
-    courier: "Lisa Wong",
-    description: "Delivery completed in 3 minutes (suspicious speed)",
+    courier: "Neema Juma",
+    description: "Delivery completed in 3 minutes (suspicious speed) in Msimbazi",
     severity: "high",
     timestamp: "2024-01-15 13:45:00"
   },
   {
     id: "ANO-003",
     type: "Extended Delay",
-    courier: "Carlos Mendez",
-    description: "Delivery delayed beyond 45 minutes threshold",
+    courier: "Salehe Mwanga",
+    description: "Delivery delayed beyond 45 minutes threshold in Mwenge",
     severity: "medium",
     timestamp: "2024-01-15 12:15:00"
   }
@@ -104,11 +104,11 @@ export const etaPredictions = [
 ];
 
 export const zoneAnalytics = [
-  { zone: "Manhattan", deliveries: 425, avgTime: "22 min", anomalies: 5 },
-  { zone: "Brooklyn", deliveries: 318, avgTime: "26 min", anomalies: 3 },
-  { zone: "Queens", deliveries: 267, avgTime: "28 min", anomalies: 2 },
-  { zone: "Bronx", deliveries: 154, avgTime: "31 min", anomalies: 1 },
-  { zone: "Staten Island", deliveries: 83, avgTime: "35 min", anomalies: 1 }
+  { zone: "Kinondoni", deliveries: 425, avgTime: "22 min", anomalies: 5 },
+  { zone: "Ilala", deliveries: 318, avgTime: "26 min", anomalies: 3 },
+  { zone: "Temeke", deliveries: 267, avgTime: "28 min", anomalies: 2 },
+  { zone: "Ubungo", deliveries: 154, avgTime: "31 min", anomalies: 1 },
+  { zone: "Kigamboni", deliveries: 83, avgTime: "35 min", anomalies: 1 }
 ];
 
 export const chartData = {

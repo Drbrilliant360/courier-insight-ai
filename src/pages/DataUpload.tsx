@@ -5,6 +5,7 @@ import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function DataUpload() {
   const { toast } = useToast();
@@ -66,12 +67,12 @@ export default function DataUpload() {
       return;
     }
     
-    // Validate file size (50MB limit)
-    if (file.size > 50 * 1024 * 1024) {
+    // Validate file size (70MB limit)
+    if (file.size > 70 * 1024 * 1024) {
       setUploadStatus("error");
       toast({
         title: "File too large",
-        description: "File size must be less than 50MB",
+        description: "File size must be less than 70MB",
         variant: "destructive"
       });
       return;
@@ -94,9 +95,12 @@ export default function DataUpload() {
         setFileStats(calculateStats(parsedData));
         setUploadStatus("success");
         
+        // Process data through Supabase edge function
+        processDataWithSupabase(parsedData, file.name, file.size);
+        
         toast({
-          title: "Upload successful",
-          description: `${parsedData.length} records loaded from ${file.name}`,
+          title: "Upload successful", 
+          description: `${parsedData.length} records loaded and being processed...`,
         });
       } catch (error) {
         setUploadStatus("error");
@@ -119,6 +123,37 @@ export default function DataUpload() {
     
     reader.readAsText(file);
   }, [toast]);
+
+  // Process data with Supabase edge function
+  const processDataWithSupabase = async (data: any[], filename: string, fileSize: number) => {
+    try {
+      const { data: result, error } = await supabase.functions.invoke('process-delivery-data', {
+        body: {
+          data,
+          filename,
+          fileSize
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Data processing complete",
+        description: `${result.processed}/${result.total} records processed successfully. ${result.errors > 0 ? `${result.errors} errors encountered.` : ''}`,
+      });
+
+      // Refresh the page to show updated data
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    } catch (error: any) {
+      toast({
+        title: "Processing failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -161,24 +196,26 @@ export default function DataUpload() {
   };
 
   const downloadSample = () => {
-    const sampleCSV = `order_id,courier_name,pickup_location,delivery_location,pickup_time,delivery_time,status
-DEL-001,John Smith,"40.7128,-74.0060","40.6962,-73.9961",2024-01-15 09:00:00,2024-01-15 09:25:00,completed
-DEL-002,Maria Garcia,"40.7505,-73.9370","40.7549,-73.9840",2024-01-15 10:30:00,2024-01-15 11:00:00,completed
-DEL-003,David Chen,"40.6892,-74.0445","40.7282,-73.7949",2024-01-15 11:15:00,2024-01-15 12:10:00,in_transit`;
+    const sampleCSV = `order_id,courier_name,pickup_location,delivery_location,pickup_time,delivery_time,status,customer_name,customer_phone
+DEL-001,Juma Mwalimu,"-6.7924,39.2083","-6.8296,39.2669",2024-01-15 09:00:00,2024-01-15 09:35:00,completed,Amina Hassan,+255712345678
+DEL-002,Fatuma Ally,"-6.8024,39.2583","-6.7896,39.2369",2024-01-15 10:30:00,2024-01-15 11:15:00,completed,Mohamed Juma,+255713456789
+DEL-003,Hassan Mwinyi,"-6.7624,39.2183","-6.8196,39.2569",2024-01-15 11:15:00,2024-01-15 12:20:00,in_transit,Grace Mbogo,+255714567890
+DEL-004,Rehema Kondo,"-6.7824,39.2283","-6.8096,39.2469",2024-01-15 12:00:00,2024-01-15 12:45:00,completed,John Msaki,+255715678901
+DEL-005,Bakari Omari,"-6.7724,39.2383","-6.8396,39.2769",2024-01-15 13:30:00,2024-01-15 14:10:00,delayed,Sarah Mwakyusa,+255716789012`;
 
     const blob = new Blob([sampleCSV], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'sample_delivery_data.csv';
+    a.download = 'sample_delivery_data_tanzania.csv';
     a.click();
     window.URL.revokeObjectURL(url);
   };
 
   const mockDataPreview = [
-    { id: "DEL-001", courier: "John Smith", pickup: "NYC", delivery: "Brooklyn", status: "Completed" },
-    { id: "DEL-002", courier: "Maria Garcia", pickup: "Manhattan", delivery: "Queens", status: "In Transit" },
-    { id: "DEL-003", courier: "David Chen", pickup: "Bronx", delivery: "Staten Island", status: "Completed" },
+    { id: "DEL-001", courier: "Juma Mwalimu", pickup: "Dar es Salaam", delivery: "Kinondoni", status: "Completed" },
+    { id: "DEL-002", courier: "Fatuma Ally", pickup: "Ilala", delivery: "Temeke", status: "In Transit" },
+    { id: "DEL-003", courier: "Hassan Mwinyi", pickup: "Kinondoni", delivery: "Ubungo", status: "Completed" },
   ];
 
   return (
@@ -245,7 +282,7 @@ DEL-003,David Chen,"40.6892,-74.0445","40.7282,-73.7949",2024-01-15 11:15:00,202
                 {dragActive ? 'Drop your CSV file here' : 'Drop your CSV file here'}
               </p>
               <p className="text-sm text-muted-foreground mb-4">
-                or click to browse files (Max 50MB)
+                or click to browse files (Max 70MB)
               </p>
               <input
                 type="file"
@@ -326,7 +363,7 @@ DEL-003,David Chen,"40.6892,-74.0445","40.7282,-73.7949",2024-01-15 11:15:00,202
             </div>
 
             <div className="text-sm text-muted-foreground">
-              <p><strong>Max file size:</strong> 50MB</p>
+              <p><strong>Max file size:</strong> 70MB</p>
               <p><strong>Max records:</strong> 100,000 deliveries</p>
             </div>
           </div>

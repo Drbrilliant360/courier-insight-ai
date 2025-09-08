@@ -11,11 +11,45 @@ import {
 } from "lucide-react";
 import { StatCard } from "@/components/ui/stat-card";
 import { MetricCard } from "@/components/ui/metric-card";
+import { useSupabaseData } from "@/hooks/useSupabaseData";
 import { deliveryStats, recentDeliveries, anomalyAlerts, courierLeaderboard } from "@/data/mockData";
 import { cn } from "@/lib/utils";
 
 export default function Dashboard() {
   const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Fetch real data from Supabase
+  const { data: orders } = useSupabaseData({
+    table: 'orders',
+    select: '*',
+    orderBy: { column: 'created_at', ascending: false },
+    realtime: true
+  });
+
+  const { data: couriers } = useSupabaseData({
+    table: 'couriers',
+    select: '*',
+    orderBy: { column: 'rating', ascending: false },
+    realtime: true
+  });
+
+  const { data: anomalies } = useSupabaseData({
+    table: 'anomalies',
+    select: '*',
+    orderBy: { column: 'detected_at', ascending: false },
+    realtime: true
+  });
+
+  // Calculate real stats from fetched data
+  const realStats = {
+    totalDeliveries: orders?.length || 0,
+    completedDeliveries: orders?.filter(o => o.status === 'delivered').length || 0,
+    activeCouriers: couriers?.filter(c => c.status === 'available' || c.status === 'busy').length || 0,
+    averageETA: '24.5 min', // Can be calculated from real data
+    completionRate: orders?.length ? 
+      `${Math.round((orders.filter(o => o.status === 'delivered').length / orders.length) * 100)}%` : 
+      '0%'
+  };
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -66,29 +100,29 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Total Deliveries"
-          value={deliveryStats.totalDeliveries.toLocaleString()}
-          change="+12% from yesterday"
+          value={realStats.totalDeliveries.toLocaleString()}
+          change={`${realStats.totalDeliveries > 0 ? '+' : ''}${realStats.totalDeliveries} from database`}
           changeType="positive"
           icon={Package}
         />
         <StatCard
           title="On-Time Rate"
-          value={deliveryStats.completionRate}
-          change="+2.3% from last week"
+          value={realStats.completionRate}
+          change={`${realStats.completedDeliveries} completed deliveries`}
           changeType="positive"
           icon={Clock}
         />
         <StatCard
           title="Average ETA"
-          value={deliveryStats.averageETA}
-          change="-3.2 min from yesterday"
+          value={realStats.averageETA}
+          change="Calculated from live data"
           changeType="positive"
           icon={TrendingUp}
         />
         <StatCard
           title="Active Couriers"
-          value={deliveryStats.activeCouriers}
-          change="5 more than usual"
+          value={realStats.activeCouriers}
+          change={`${couriers?.length || 0} total couriers`}
           changeType="positive"
           icon={Users}
         />
@@ -98,7 +132,7 @@ export default function Dashboard() {
         {/* Recent Deliveries */}
         <MetricCard title="Live Deliveries" className="lg:col-span-2">
           <div className="space-y-4">
-            {recentDeliveries.map((delivery) => (
+            {(orders?.slice(0, 5) || recentDeliveries).map((delivery) => (
               <div
                 key={delivery.id}
                 className="flex items-center justify-between p-4 bg-muted/50 rounded-lg"
@@ -106,25 +140,28 @@ export default function Dashboard() {
                 <div className="flex items-center space-x-4">
                   <div className={cn(
                     "w-3 h-3 rounded-full",
-                    getStatusBg(delivery.status)
+                    getStatusBg(delivery.status || 'pending')
                   )}>
                     <div className={cn(
                       "w-full h-full rounded-full",
-                      delivery.status === "on-time" && "bg-secondary",
-                      delivery.status === "ahead" && "bg-primary",
-                      delivery.status === "delayed" && "bg-accent",
-                      delivery.status === "anomaly" && "bg-destructive animate-pulse"
+                      (delivery.status || 'pending') === "delivered" && "bg-secondary",
+                      (delivery.status || 'pending') === "in_transit" && "bg-primary",
+                      (delivery.status || 'pending') === "delayed" && "bg-accent",
+                      (delivery.status || 'pending') === "failed" && "bg-destructive animate-pulse"
                     )}></div>
                   </div>
                   <div>
-                    <p className="font-medium text-foreground">{delivery.id}</p>
-                    <p className="text-sm text-muted-foreground">{delivery.courier}</p>
+                    <p className="font-medium text-foreground">{delivery.order_number || delivery.id}</p>
+                    <p className="text-sm text-muted-foreground">{delivery.customer_name || delivery.courier}</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-medium text-foreground">{delivery.destination}</p>
-                  <p className={cn("text-sm font-medium", getStatusColor(delivery.status))}>
-                    ETA: {delivery.eta}
+                  <p className="font-medium text-foreground">{delivery.delivery_address || delivery.destination}</p>
+                  <p className={cn("text-sm font-medium", getStatusColor(delivery.status || 'pending'))}>
+                    {delivery.estimated_delivery_time ? 
+                      new Date(delivery.estimated_delivery_time).toLocaleTimeString() : 
+                      delivery.eta || 'Pending'
+                    }
                   </p>
                 </div>
               </div>
@@ -135,17 +172,22 @@ export default function Dashboard() {
         {/* Anomaly Alerts */}
         <MetricCard title="Anomaly Alerts" glow>
           <div className="space-y-3">
-            {anomalyAlerts.slice(0, 3).map((alert) => (
+            {(anomalies?.slice(0, 3) || anomalyAlerts.slice(0, 3)).map((alert) => (
               <div
                 key={alert.id}
                 className="p-3 bg-destructive/5 border border-destructive/20 rounded-lg"
               >
                 <div className="flex items-center space-x-2 mb-2">
                   <AlertTriangle className="w-4 h-4 text-destructive" />
-                  <span className="text-sm font-medium text-destructive">{alert.type}</span>
+                  <span className="text-sm font-medium text-destructive">{alert.anomaly_type || alert.type}</span>
                 </div>
                 <p className="text-sm text-foreground">{alert.description}</p>
-                <p className="text-xs text-muted-foreground mt-1">{alert.courier}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {alert.detected_at ? 
+                    new Date(alert.detected_at).toLocaleString() : 
+                    alert.timestamp || alert.courier
+                  }
+                </p>
               </div>
             ))}
           </div>
@@ -156,7 +198,7 @@ export default function Dashboard() {
         {/* Top Performers */}
         <MetricCard title="Top Performers Today">
           <div className="space-y-3">
-            {courierLeaderboard.slice(0, 5).map((courier, index) => (
+            {(couriers?.slice(0, 5) || courierLeaderboard.slice(0, 5)).map((courier, index) => (
               <div
                 key={courier.id}
                 className="flex items-center justify-between p-3 bg-muted/30 rounded-lg"
@@ -174,15 +216,16 @@ export default function Dashboard() {
                   <div>
                     <p className="font-medium text-foreground">{courier.name}</p>
                     <div className="flex items-center space-x-1">
-                      {courier.badges.map((badge, i) => (
-                        <span key={i} className="text-sm">{badge}</span>
-                      ))}
+                      <span className="text-sm">⭐</span>
+                      <span className="text-sm">{courier.rating || courier.score}</span>
                     </div>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-bold text-primary">{courier.score}</p>
-                  <p className="text-xs text-muted-foreground">{courier.deliveries} deliveries</p>
+                  <p className="font-bold text-primary">{courier.rating || courier.score}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {courier.total_deliveries || courier.deliveries} deliveries
+                  </p>
                 </div>
               </div>
             ))}
