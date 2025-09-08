@@ -12,9 +12,12 @@ import {
   TrendingUp,
   Zap,
   Menu,
-  X
+  X,
+  LogOut
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
 
 const navigationItems = [
   { title: "Dashboard", url: "/", icon: Home },
@@ -32,8 +35,13 @@ export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const currentPath = location.pathname;
+  const { signOut } = useAuth();
 
   const isActive = (path: string) => currentPath === path;
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
 
   return (
     <div className={cn(
@@ -85,7 +93,15 @@ export function AppSidebar() {
 
       {/* Bottom Section */}
       {!collapsed && (
-        <div className="absolute bottom-4 left-4 right-4">
+        <div className="absolute bottom-4 left-4 right-4 space-y-3">
+          <Button
+            variant="ghost"
+            onClick={handleSignOut}
+            className="w-full justify-start text-muted-foreground hover:text-foreground"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Sign Out
+          </Button>
           <div className="bg-gradient-primary p-4 rounded-lg text-white">
             <div className="flex items-center space-x-2 mb-2">
               <Zap className="w-5 h-5" />
@@ -95,6 +111,18 @@ export function AppSidebar() {
               Real-time delivery intelligence with predictive analytics
             </p>
           </div>
+        </div>
+      )}
+      {collapsed && (
+        <div className="absolute bottom-4 left-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleSignOut}
+            className="p-2 text-muted-foreground hover:text-foreground"
+          >
+            <LogOut className="w-4 h-4" />
+          </Button>
         </div>
       )}
     </div>

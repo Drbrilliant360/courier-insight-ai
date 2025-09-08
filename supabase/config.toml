@@ -1,1 +1,4 @@
 project_id = "bupkwdwscgyczhaejavd"
+
+[functions.process-delivery-data]
+verify_jwt = true
