@@ -53,6 +53,8 @@ serve(async (req) => {
 
     const { data, filename, fileSize } = await req.json();
 
+    console.log(`Processing large dataset for user ${user.id}: ${filename} (${fileSize} bytes, ${data.length} records)`);
+
     console.log(`Processing delivery data for user ${user.id}: ${filename} (${fileSize} bytes)`);
 
     // Store analytics metadata
@@ -90,118 +92,188 @@ serve(async (req) => {
     let processedCount = 0;
     const errors: string[] = [];
 
-    // Process each delivery record
-    for (const record of data) {
-      try {
-        // Parse location coordinates
-        const parseLocation = (locationStr: string): [number, number] | null => {
+    // Batch processing for large datasets
+    const BATCH_SIZE = 1000;
+    const batches = [];
+    for (let i = 0; i < data.length; i += BATCH_SIZE) {
+      batches.push(data.slice(i, i + BATCH_SIZE));
+    }
+
+    console.log(`Processing ${data.length} records in ${batches.length} batches of ${BATCH_SIZE}`);
+
+    // Process background task for large datasets
+    const processLargeDataset = async () => {
+      for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+        const batch = batches[batchIndex];
+        console.log(`Processing batch ${batchIndex + 1}/${batches.length}`);
+
+        const batchPromises = batch.map(async (record) => {
           try {
-            // Try to parse as "lat,lng" format
-            if (locationStr.includes(',')) {
-              const [lat, lng] = locationStr.split(',').map(s => parseFloat(s.trim()));
-              if (!isNaN(lat) && !isNaN(lng)) {
-                return [lng, lat]; // PostGIS expects [lng, lat]
+            // Parse location coordinates
+            const parseLocation = (locationStr: string): [number, number] | null => {
+              try {
+                // Try to parse as "lat,lng" format
+                if (locationStr.includes(',')) {
+                  const [lat, lng] = locationStr.split(',').map(s => parseFloat(s.trim()));
+                  if (!isNaN(lat) && !isNaN(lng)) {
+                    return [lng, lat]; // PostGIS expects [lng, lat]
+                  }
+                }
+                return null;
+              } catch {
+                return null;
+              }
+            };
+
+            const pickupCoords = parseLocation(record.pickup_location);
+            const deliveryCoords = parseLocation(record.delivery_location);
+
+            if (!pickupCoords || !deliveryCoords) {
+              errors.push(`Invalid location format for order ${record.order_id}`);
+              return null;
+            }
+
+            // Find or create courier
+            let courier;
+            const { data: existingCourier } = await supabaseClient
+              .from('couriers')
+              .select('id')
+              .eq('name', record.courier_name)
+              .single();
+
+            if (existingCourier) {
+              courier = existingCourier;
+            } else {
+              const { data: newCourier, error: courierError } = await supabaseClient
+                .from('couriers')
+                .insert([
+                  {
+                    name: record.courier_name,
+                    status: 'available',
+                    vehicle_type: 'bike',
+                    rating: 5.0,
+                  },
+                ])
+                .select()
+                .single();
+
+              if (courierError) {
+                errors.push(`Failed to create courier ${record.courier_name}: ${courierError.message}`);
+                return null;
+              }
+              courier = newCourier;
+            }
+
+            // Create order
+            const orderData = {
+              order_number: record.order_id,
+              customer_name: record.customer_name || 'Unknown Customer',
+              customer_phone: record.customer_phone || null,
+              pickup_location: `POINT(${pickupCoords[0]} ${pickupCoords[1]})`,
+              pickup_address: record.pickup_location,
+              delivery_location: `POINT(${deliveryCoords[0]} ${deliveryCoords[1]})`,
+              delivery_address: record.delivery_location,
+              status: record.status.toLowerCase().replace(/\s+/g, '_') as any,
+              estimated_pickup_time: record.pickup_time ? new Date(record.pickup_time).toISOString() : null,
+              actual_pickup_time: record.pickup_time ? new Date(record.pickup_time).toISOString() : null,
+              estimated_delivery_time: record.delivery_time ? new Date(record.delivery_time).toISOString() : null,
+              actual_delivery_time: record.delivery_time ? new Date(record.delivery_time).toISOString() : null,
+              courier_id: courier.id,
+              special_instructions: record.special_instructions || null,
+              priority_level: 1,
+            };
+
+            const { error: orderError } = await supabaseClient
+              .from('orders')
+              .insert([orderData]);
+
+            if (orderError) {
+              if (orderError.code === '23505') {
+                const { error: updateError } = await supabaseClient
+                  .from('orders')
+                  .update(orderData)
+                  .eq('order_number', record.order_id);
+
+                if (updateError) {
+                  errors.push(`Failed to update order ${record.order_id}: ${updateError.message}`);
+                  return null;
+                }
+              } else {
+                errors.push(`Failed to create order ${record.order_id}: ${orderError.message}`);
+                return null;
               }
             }
+
+            return record.order_id;
+          } catch (error) {
+            errors.push(`Error processing record ${record.order_id}: ${error.message}`);
             return null;
-          } catch {
-            return null;
           }
-        };
+        });
 
-        const pickupCoords = parseLocation(record.pickup_location);
-        const deliveryCoords = parseLocation(record.delivery_location);
+        // Wait for batch to complete
+        const batchResults = await Promise.allSettled(batchPromises);
+        const successfulInBatch = batchResults.filter(result => 
+          result.status === 'fulfilled' && result.value !== null
+        ).length;
+        
+        processedCount += successfulInBatch;
 
-        if (!pickupCoords || !deliveryCoords) {
-          errors.push(`Invalid location format for order ${record.order_id}`);
-          continue;
-        }
+        // Update progress after each batch
+        await supabaseClient
+          .from('analytics_data')
+          .update({ 
+            processed_records: processedCount,
+            processing_status: batchIndex === batches.length - 1 ? 
+              (processedCount === data.length ? 'completed' : 'completed_with_errors') : 'processing'
+          })
+          .eq('id', analyticsId);
 
-        // Find or create courier
-        let courier;
-        const { data: existingCourier } = await supabaseClient
-          .from('couriers')
-          .select('id')
-          .eq('name', record.courier_name)
-          .single();
-
-        if (existingCourier) {
-          courier = existingCourier;
-        } else {
-          const { data: newCourier, error: courierError } = await supabaseClient
-            .from('couriers')
-            .insert([
-              {
-                name: record.courier_name,
-                status: 'available',
-                vehicle_type: 'bike', // Default
-                rating: 5.0,
-              },
-            ])
-            .select()
-            .single();
-
-          if (courierError) {
-            errors.push(`Failed to create courier ${record.courier_name}: ${courierError.message}`);
-            continue;
-          }
-          courier = newCourier;
-        }
-
-        // Create order
-        const orderData = {
-          order_number: record.order_id,
-          customer_name: record.customer_name || 'Unknown Customer',
-          customer_phone: record.customer_phone || null,
-          pickup_location: `POINT(${pickupCoords[0]} ${pickupCoords[1]})`,
-          pickup_address: record.pickup_location,
-          delivery_location: `POINT(${deliveryCoords[0]} ${deliveryCoords[1]})`,
-          delivery_address: record.delivery_location,
-          status: record.status.toLowerCase().replace(/\s+/g, '_') as any,
-          estimated_pickup_time: record.pickup_time ? new Date(record.pickup_time).toISOString() : null,
-          actual_pickup_time: record.pickup_time ? new Date(record.pickup_time).toISOString() : null,
-          estimated_delivery_time: record.delivery_time ? new Date(record.delivery_time).toISOString() : null,
-          actual_delivery_time: record.delivery_time ? new Date(record.delivery_time).toISOString() : null,
-          courier_id: courier.id,
-          special_instructions: record.special_instructions || null,
-          priority_level: 1,
-        };
-
-        const { error: orderError } = await supabaseClient
-          .from('orders')
-          .insert([orderData]);
-
-        if (orderError) {
-          // If order already exists, try to update it
-          if (orderError.code === '23505') { // Unique constraint violation
-            const { error: updateError } = await supabaseClient
-              .from('orders')
-              .update(orderData)
-              .eq('order_number', record.order_id);
-
-            if (updateError) {
-              errors.push(`Failed to update order ${record.order_id}: ${updateError.message}`);
-              continue;
-            }
-          } else {
-            errors.push(`Failed to create order ${record.order_id}: ${orderError.message}`);
-            continue;
-          }
-        }
-
-        processedCount++;
-
-        // Update progress
-        if (processedCount % 10 === 0) {
-          await supabaseClient
-            .from('analytics_data')
-            .update({ processed_records: processedCount })
-            .eq('id', analyticsId);
-        }
-      } catch (error) {
-        errors.push(`Error processing record ${record.order_id}: ${error.message}`);
+        console.log(`Batch ${batchIndex + 1} completed: ${successfulInBatch}/${batch.length} records processed`);
       }
+
+      // Final update
+      await supabaseClient
+        .from('analytics_data')
+        .update({
+          processed_records: processedCount,
+          processing_status: processedCount === data.length ? 'completed' : 'completed_with_errors',
+          metadata: {
+            ...analyticsData.metadata,
+            processing_completed: new Date().toISOString(),
+            errors: errors.slice(0, 10),
+            total_errors: errors.length,
+            batch_size: BATCH_SIZE,
+            total_batches: batches.length,
+          },
+        })
+        .eq('id', analyticsId);
+
+      console.log(`Large dataset processing completed: ${processedCount}/${data.length} records processed`);
+    };
+
+    // For large datasets (>10,000 records), use background processing
+    if (data.length > 10000) {
+      // Start background processing
+      EdgeRuntime.waitUntil(processLargeDataset());
+      
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: 'Large dataset processing started in background',
+          total: data.length,
+          analytics_id: analyticsId,
+          background_processing: true
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 202,
+        }
+      );
     }
+
+    // For smaller datasets, process synchronously
+    await processLargeDataset();
 
     // Final update
     await supabaseClient

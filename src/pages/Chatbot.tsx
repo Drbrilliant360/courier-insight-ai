@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Send, Bot, User, Sparkles } from "lucide-react";
+import { Send, Bot, User, Sparkles, Brain } from "lucide-react";
 import { MetricCard } from "@/components/ui/metric-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import AIQueryEngine from "@/components/AIQueryEngine";
 
 interface Message {
   id: string;
@@ -15,20 +16,23 @@ export default function Chatbot() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
-      content: "Hello! I'm your AI Delivery Intelligence Assistant. I can help you with courier performance analysis, delivery predictions, and anomaly detection. What would you like to know?",
+      content: "Hello! I'm your AI-powered Tanzania Delivery Intelligence Assistant. I can analyze your delivery data in real-time, provide courier performance insights, predict ETAs, and detect anomalies. I'm connected to your database and can answer questions about your actual delivery operations. What would you like to know?",
       isBot: true,
       timestamp: new Date()
     }
   ]);
   const [inputValue, setInputValue] = useState("");
+  const [currentQuery, setCurrentQuery] = useState("");
 
   const suggestedQueries = [
-    "Which courier has the highest reliability score today?",
-    "Which city had the most anomalies this week?",
-    "Predict ETA for Order ID #12345",
-    "Show me delivery performance trends",
-    "Which zones need more couriers?",
-    "What's the average delivery time in Manhattan?"
+    "Which courier has the highest performance in Dar es Salaam?",
+    "How many orders were completed today?",
+    "What's the average delivery time in Kinondoni?",
+    "Show me delivery trends for this week",
+    "Which areas in Tanzania need more couriers?",
+    "Are there any anomalies in recent deliveries?",
+    "What's the completion rate for today?",
+    "How many active couriers do we have?"
   ];
 
   const botResponses = {
@@ -38,6 +42,17 @@ export default function Chatbot() {
     trends: "Delivery performance trends show: Peak efficiency between 10-11 AM (22 min avg), highest volume at 1 PM (85 deliveries/hour), and 92.7% overall completion rate this week - up 2.3% from last week.",
     zones: "Zone analysis indicates Queens and Staten Island need additional courier coverage. Current average delivery times: Queens (28 min) and Staten Island (35 min) exceed our 25-minute target.",
     manhattan: "Manhattan's average delivery time is 22 minutes with 425 total deliveries today. Performance is excellent with only 5 anomalies detected and 94% on-time completion rate."
+  };
+
+  const handleAIResponse = (response: string) => {
+    const botMessage: Message = {
+      id: (Date.now() + 1).toString(),
+      content: response,
+      isBot: true,
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, botMessage]);
+    setCurrentQuery("");
   };
 
   const handleSendMessage = () => {
@@ -51,37 +66,7 @@ export default function Chatbot() {
     };
 
     setMessages(prev => [...prev, userMessage]);
-
-    // Simulate bot response
-    setTimeout(() => {
-      let botResponse = "I understand your question. Let me analyze the current delivery data and provide you with insights...";
-      
-      // Simple keyword matching for demo
-      const query = inputValue.toLowerCase();
-      if (query.includes("reliability") || query.includes("highest")) {
-        botResponse = botResponses.reliability;
-      } else if (query.includes("anomal") || query.includes("city")) {
-        botResponse = botResponses.anomalies;
-      } else if (query.includes("eta") || query.includes("12345")) {
-        botResponse = botResponses.eta;
-      } else if (query.includes("trend") || query.includes("performance")) {
-        botResponse = botResponses.trends;
-      } else if (query.includes("zone") || query.includes("courier")) {
-        botResponse = botResponses.zones;
-      } else if (query.includes("manhattan") || query.includes("average")) {
-        botResponse = botResponses.manhattan;
-      }
-
-      const botMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: botResponse,
-        isBot: true,
-        timestamp: new Date()
-      };
-
-      setMessages(prev => [...prev, botMessage]);
-    }, 1000);
-
+    setCurrentQuery(inputValue);
     setInputValue("");
   };
 
@@ -138,12 +123,20 @@ export default function Chatbot() {
               ))}
             </div>
 
+            {/* AI Processing Indicator */}
+            {currentQuery && (
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground p-3 bg-muted/20 rounded-lg">
+                <Brain className="w-4 h-4 animate-pulse" />
+                <span>AI analyzing your question...</span>
+              </div>
+            )}
+
             {/* Input */}
             <div className="flex space-x-2">
               <Input
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                placeholder="Ask me about delivery analytics..."
+                placeholder="Ask me about your Tanzania delivery data..."
                 onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
                 className="flex-1"
               />
@@ -151,6 +144,14 @@ export default function Chatbot() {
                 <Send className="w-4 h-4" />
               </Button>
             </div>
+
+            {/* AI Query Engine */}
+            {currentQuery && (
+              <AIQueryEngine 
+                userQuery={currentQuery} 
+                onResponse={handleAIResponse}
+              />
+            )}
           </div>
         </MetricCard>
 
@@ -179,11 +180,11 @@ export default function Chatbot() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="text-center">
             <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-3">
-              <Bot className="w-6 h-6 text-primary" />
+              <Brain className="w-6 h-6 text-primary" />
             </div>
-            <h3 className="font-medium text-foreground mb-2">Performance Analysis</h3>
+            <h3 className="font-medium text-foreground mb-2">Real-time Data Analysis</h3>
             <p className="text-sm text-muted-foreground">
-              Get insights on courier performance, delivery times, and completion rates
+              AI-powered insights from your actual Tanzania delivery database
             </p>
           </div>
           <div className="text-center">

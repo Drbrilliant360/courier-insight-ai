@@ -67,12 +67,12 @@ export default function DataUpload() {
       return;
     }
     
-    // Validate file size (70MB limit)
-    if (file.size > 70 * 1024 * 1024) {
+    // Validate file size (250MB limit)
+    if (file.size > 250 * 1024 * 1024) {
       setUploadStatus("error");
       toast({
         title: "File too large",
-        description: "File size must be less than 70MB",
+        description: "File size must be less than 250MB",
         variant: "destructive"
       });
       return;
@@ -282,7 +282,7 @@ DEL-005,Bakari Omari,"-6.7724,39.2383","-6.8396,39.2769",2024-01-15 13:30:00,202
                 {dragActive ? 'Drop your CSV file here' : 'Drop your CSV file here'}
               </p>
               <p className="text-sm text-muted-foreground mb-4">
-                or click to browse files (Max 70MB)
+                or click to browse files (Max 250MB)
               </p>
               <input
                 type="file"
@@ -363,8 +363,9 @@ DEL-005,Bakari Omari,"-6.7724,39.2383","-6.8396,39.2769",2024-01-15 13:30:00,202
             </div>
 
             <div className="text-sm text-muted-foreground">
-              <p><strong>Max file size:</strong> 70MB</p>
-              <p><strong>Max records:</strong> 100,000 deliveries</p>
+              <p><strong>Max file size:</strong> 250MB</p>
+              <p><strong>Max records:</strong> 500,000+ deliveries</p>
+              <p><strong>Large datasets:</strong> Processed in background batches</p>
             </div>
           </div>
         </MetricCard>
