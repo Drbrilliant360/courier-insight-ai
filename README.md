@@ -2,7 +2,7 @@
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/1fdd0ca1-64f1-4cfb-8673-8521f2d1ac1f
+**URL**: (https://courier-insight-ai.vercel.app)
 
 ## How can I edit this code?
 
@@ -10,7 +10,7 @@ There are several ways of editing your application.
 
 **Use Lovable**
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/1fdd0ca1-64f1-4cfb-8673-8521f2d1ac1f) and start prompting.
+Simply visit the https://courier-insight-ai.vercel.app and start prompting.
 
 Changes made via Lovable will be committed automatically to this repo.
 
@@ -62,12 +62,6 @@ This project is built with:
 
 ## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/1fdd0ca1-64f1-4cfb-8673-8521f2d1ac1f) and click on Share -> Publish.
+Simply open https://courier-insight-ai.vercel.app
 
-## Can I connect a custom domain to my Lovable project?
 
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
